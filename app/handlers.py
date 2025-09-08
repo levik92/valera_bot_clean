@@ -18,6 +18,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.formatting import Bold
 
 import openai
+from functools import partial
 
 from .config import get_settings, Settings
 from .db import Database
@@ -155,12 +156,12 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
     """Register all handlers to the dispatcher."""
     # /start command
     dp.message.register(
-        lambda msg: handle_start(msg, db, settings),
+        partial(handle_start, db=db, settings=settings),
         F.text.startswith("/start"),
     )
     # Balance
     dp.message.register(
-        lambda msg: handle_balance(msg, db),
+       partial(handle_balance, db=db),
         F.text == "💰 Мой баланс",
     )
     # Instruction
@@ -175,5 +176,5 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
     )
     # Any other text or photo triggers generation
     dp.message.register(
-        lambda msg: handle_generate(msg, bot, db, settings)
+       partial(handle_generate, bot=bot, db=db, settings=settings)
     )
