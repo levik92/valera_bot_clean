@@ -275,7 +275,7 @@ async def handle_generate(message: types.Message, bot: Bot, db: Database, settin
     # Perform the API call
     try:
         completion = await openai.ChatCompletion.acreate(
-            model="gpt-4o",
+            model="gpt-5",
             messages=chat_messages,
             max_tokens=512,
             temperature=0.7,
