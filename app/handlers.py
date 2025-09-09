@@ -330,15 +330,21 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
         F.text.startswith("/start"),
     )
     # Unified balance and top‑up handler triggered by the combined button
-    dp.message.register(
-        lambda msg: handle_balance_topup(msg, db=db, settings=settings),
-        F.text == "💰 Баланс/Пополнить",
-    )
-    # Invite friends handler
-    dp.message.register(
-        lambda msg: handle_invite(msg, bot=bot, settings=settings),
-        F.text == "👥 Пригласить друга",
-    )
+async def balance_topup_handler(message: types.Message) -> None:
+    await handle_balance_topup(message, db=db, settings=settings)
+
+async def invite_handler(message: types.Message) -> None:
+    await handle_invite(message, bot=bot, settings=settings)
+
+dp.message.register(
+    balance_topup_handler,
+    F.text == "💰 Баланс/Пополнить",
+)
+dp.message.register(
+    invite_handler,
+    F.text == "👥 Пригласить друга",
+)
+
     # Analyse chat
     dp.message.register(
         handle_analyze_chat_command,
