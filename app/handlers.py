@@ -326,7 +326,7 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
     # Register the command and button handlers with filters. The order matters: more specific
     # handlers should be registered before the generic generate_handler.
     dp.message.register(start_handler, CommandStart())
-    )
+  
     # Unified balance and top‑up handler triggered by the combined button
 async def balance_topup_handler(message: types.Message) -> None:
     await handle_balance_topup(message, db=db, settings=settings)
