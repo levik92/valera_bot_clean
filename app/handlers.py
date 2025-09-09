@@ -1,5 +1,6 @@
 """Telegram bot handlers for Valera bot.
 
+
 This module defines all the event handlers for user interactions. It relies on
 `aiogram` version 3 and uses a simple state‑free approach: each message is
 handled independently. User balances and referrals are managed in the database
