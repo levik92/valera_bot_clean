@@ -360,6 +360,5 @@ dp.message.register(invite_handler,        F.text == "👥 Пригласить 
         F.text == "🧊 Темы для разговора",
     )
     # Register generic generate handler without a filter so it catches all other messages
-    dp.message.register(
-        generate_handler,
-    )
+      dp.message.register(generate_handler, F.text)
+    
