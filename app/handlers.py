@@ -17,6 +17,7 @@ from aiogram import Bot, Dispatcher, types, F
 # from functools import partial  # partial is unused now and kept commented out for future reference
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.formatting import Bold
+from aiogram.filters import CommandStart
 
 import openai
 
@@ -325,9 +326,7 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
 
     # Register the command and button handlers with filters. The order matters: more specific
     # handlers should be registered before the generic generate_handler.
-    dp.message.register(
-        start_handler,
-        F.text.startswith("/start"),
+    dp.message.register(start_handler, CommandStart())
     )
     # Unified balance and top‑up handler triggered by the combined button
 async def balance_topup_handler(message: types.Message) -> None:
@@ -336,14 +335,9 @@ async def balance_topup_handler(message: types.Message) -> None:
 async def invite_handler(message: types.Message) -> None:
     await handle_invite(message, bot=bot, settings=settings)
 
-dp.message.register(
-    balance_topup_handler,
-    F.text == "💰 Баланс/Пополнить",
-)
-dp.message.register(
-    invite_handler,
-    F.text == "👥 Пригласить друга",
-)
+dp.message.register(balance_topup_handler, F.text == "💰 Баланс/Пополнить")
+dp.message.register(invite_handler,        F.text == "👥 Пригласить друга")
+
 
     # Analyse chat
     dp.message.register(
