@@ -323,7 +323,6 @@ def register_handlers(dp: Dispatcher, bot: Bot, db: Database, settings: Settings
     # Wrapper for text/photo messages to bind bot, db, and settings
     async def generate_handler(message: types.Message) -> None:
         await handle_generate(message, bot=bot, db=db, settings=settings)
-
     # Register the command and button handlers with filters. The order matters: more specific
     # handlers should be registered before the generic generate_handler.
     dp.message.register(start_handler, CommandStart())
