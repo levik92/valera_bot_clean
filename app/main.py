@@ -28,11 +28,10 @@ async def main() -> None:
     db = Database(settings)
     await db.connect()
     bot = Bot(token=settings.bot_token, parse_mode="HTML")
-            # Delete webhook to ensure polling works
-        await bot.delete_webhook(drop_pending_updates=True)
-
     dp = Dispatcher()
     register_handlers(dp, bot, db, settings)
+    # Delete webhook to ensure polling works
+        await bot.delete_webhook(drop_pending_updates=True)
     try:
         await dp.start_polling(bot)
     finally:
