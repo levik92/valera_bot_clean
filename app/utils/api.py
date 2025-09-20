@@ -1,16 +1,11 @@
-"""Core logic helpers and system prompt for the Valera bot."""
-
-from __future__ import annotations
-
-from typing import List, Dict, Union
+from openai import AsyncOpenAI
+from config_reader import settings
 
 
-# Define the system prompt that sets the behaviour of the assistant.
-# This prompt captures Valera's persona as a confident, flirty coach helping the user
-# to attract and connect with women. It outlines the core scenarios (analysis of
-# conversations, profiles, and topics for discussion) and the structure of the
-# expected responses. Valera never greets, always speaks in a casual, playful tone,
-# and provides structured advice aimed at seduction and maintaining a light vibe.
+client = AsyncOpenAI(
+    api_key=settings.openai_api_key.get_secret_value(),
+)
+
 SYSTEM_PROMPT = (
     "Ты — Валера, тренер по соблазнению и общению с девушками. "
     "Твоя основная задача: помочь мне соблазнить девушку, понравиться ей и наладить лёгкий, классный вайб общения.\n\n"
@@ -40,34 +35,51 @@ SYSTEM_PROMPT = (
 )
 
 
-def build_messages(prompt: str, image_links: List[str] | None = None) -> List[Dict[str, Union[str, List]]]:
-    """Construct a message payload for the OpenAI Chat API.
+async def chat_with_gpt(
+    text: str, 
+):
+    messages = [{
+        "role": "system",
+        "content": SYSTEM_PROMPT
+    }]
+    messages.append({"role": "user", "content": text})
 
-    Parameters
-    ----------
-    prompt: str
-        The user's textual prompt.
-    image_links: list[str] | None
-        Optional list of image URLs that should be included in the conversation.
+    response = await client.chat.completions.create(
+        messages=messages, model="gpt-4.1-mini", 
+    )
+    
+    return response.choices[0].message.content.strip()
 
-    Returns
-    -------
-    list[dict]
-        A list of message dicts ready to be passed to openai.ChatCompletion.create.
-    """
-    messages: List[Dict[str, Union[str, List]]] = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
 
-    if image_links:
-        # OpenAI API expects a single message with a list of content parts when including images
-        parts: List[Dict[str, Union[str, Dict[str, str]]]] = []
-        if prompt:
-            parts.append({"type": "text", "text": prompt})
-        for url in image_links:
-            parts.append({"type": "image_url", "image_url": {"url": url}})
-        messages.append({"role": "user", "content": parts})
-    else:
-        messages.append({"role": "user", "content": prompt})
+async def analyze_photo(image_url: str, caption: str = None):
+    response = await client.responses.create(
+        model="gpt-4.1-mini",
+        input=[{
+            "role": "assistant",
+            "content": [
+                {"type": "reasoning_text", "text": caption if caption else SYSTEM_PROMPT},
+                {
+                    "type": "input_image",
+                    "image_url": image_url
+                },
+            ]
+        }]
+    )
+    # response = await client.chat.completions.create(
+    #     messages=[{
+    #         "role": "system",
+    #         "content": [
+    #             {"type": "text", "text": caption if caption else SYSTEM_PROMPT},
+    #             {
+    #                 "type": "image_url",
+    #                 "image_url": {
+    #                     "url": image_url,
+    #                 }
+    #             },
+    #         ],
+    #     }],
+    #     model="gpt-4-vision-preview",
+    # )
 
-    return messages
+    # return response.choices[0].message.content
+    return response.output_text

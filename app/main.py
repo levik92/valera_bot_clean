@@ -1,43 +1,35 @@
-"""Entry point for the Valera bot.
-
-This module initialises the configuration, database, bot and dispatcher, then
-starts polling. It is designed to run on platforms like Heroku where a
-single process runs an asynchronous event loop.
-"""
-
-from __future__ import annotations
-
-import asyncio
+from contextlib import suppress
 
 from aiogram import Bot, Dispatcher
-import openai
 
-from .config import get_settings
-from .db import Database
-from .handlers import register_handlers
+from factory import create_dispatcher, create_bot
+from database import create_tables, db_manager
 
 
-async def main() -> None:
-    settings = get_settings()
-    if not settings.bot_token:
-        raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
-    if not settings.openai_key:
-        raise RuntimeError("OPENAI_API_KEY is not set")
-    openai.api_key = settings.openai_key
-    # Create DB and bot
-    db = Database(settings)
-    await db.connect()
-    bot = Bot(token=settings.bot_token, parse_mode="HTML")
-    dp = Dispatcher()
-    register_handlers(dp, bot, db, settings)
-    # Delete webhook to ensure polling works
-        await bot.delete_webhook(drop_pending_updates=True)
-    try:
-        await dp.start_polling(bot)
-    finally:
-        await db.close()
-        await bot.session.close()
+async def on_startup(bot: Bot):
+    await create_tables()
+    await bot.delete_webhook(drop_pending_updates=True)
+    print("Bot started")
 
 
+async def on_shutdown():
+    await db_manager.dispose()
+    print("Bot stopped")
+
+
+def main():
+    bot: Bot = create_bot()
+    dp: Dispatcher = create_dispatcher()
+
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
+
+    dp.run_polling(
+        bot,
+        allowed_updates=dp.resolve_used_update_types()
+    )
+
+     
 if __name__ == "__main__":
-    asyncio.run(main())
+    with suppress(KeyboardInterrupt):
+        main()
